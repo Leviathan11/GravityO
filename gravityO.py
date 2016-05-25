@@ -17,6 +17,8 @@ def generatemap():  # creates the map from an existing mapfinal.txt file (conver
             screen.addstr(y, x, '+', curses.color_pair(z))
         if z == 4:
             screen.addstr(y, x, '#', curses.color_pair(z))
+        if z == 5:
+            screen.addstr(y, x, 'N', curses.color_pair(z))
     screen.refresh()
 
 
@@ -33,7 +35,7 @@ def checkaround():  # checks if the O is connecting to a wall (so we can use gra
 
 
 def move(num):  # 1:down 2:up 3:left 4:right
-    global y, x, gravity
+    global y, x, gravity, steps
     if num == 1:
         screen.addch(y, x, ' ')
         y += 1
@@ -54,10 +56,12 @@ def move(num):  # 1:down 2:up 3:left 4:right
         x += 1
         screen.addch(y, x, 'O')
         screen.refresh()
+    if gravity[0] == 2:
+        steps += 1
 
 
 def game():
-    global y, x, gravity, gameover
+    global y, x, gravity, gameover, steps
     curses.cbreak()
     curses.noecho()
     curses.curs_set(0)
@@ -87,7 +91,11 @@ def game():
                     elif screen.inch(y + 1, x) == 1059:  # win
                         gameover = 2
                         break
-                if gravity[0]:
+                    elif screen.inch(y + 1, x) == 1358:
+                        move(1)
+                        gravity[0] = 2
+                        time.sleep(0.1)
+                if gravity[0] == 1:
                     if screen.inch(y - 1, x) == ord(' '):
                         move(2)
                         time.sleep(0.1)
@@ -105,8 +113,12 @@ def game():
                     elif screen.inch(y - 1, x) == 1059:
                         gameover = 2
                         break
+                    elif screen.inch(y - 1, x) == 1358:
+                        move(2)
+                        gravity[0] = 2
+                        time.sleep(0.1)
             if gravity[1]:
-                if gravity[0]:
+                if gravity[0] == 1:
                     if screen.inch(y, x - 1) == ord(' '):
                         move(3)
                         time.sleep(0.1)
@@ -124,6 +136,11 @@ def game():
                     elif screen.inch(y, x - 1) == 1059:
                         gameover = 2
                         break
+                    elif screen.inch(y, x - 1) == 1358:
+                        move(3)
+                        gravity[1] = 0
+                        gravity[0] = 2
+                        time.sleep(0.1)
                 if not gravity[0]:
                     if screen.inch(y, x + 1) == ord(' '):
                         move(4)
@@ -142,6 +159,11 @@ def game():
                     elif screen.inch(y, x + 1) == 1059:
                         gameover = 2
                         break
+                    elif screen.inch(y, x + 1) == 1358:
+                        move(4)
+                        gravity[1] = 0
+                        gravity[0] = 2
+                        time.sleep(0.1)
         if not gravity[1]:
             if q == ord('a'):
                 if screen.inch(y, x - 1) == ord(' '):
@@ -161,6 +183,27 @@ def game():
                 elif screen.inch(y, x + 1) == 1059:
                     gameover = 2
                     break
+            if q == ord('w'):
+                if screen.inch(y - 1, x) == ord(' '):
+                    move(2)
+                elif screen.inch(y - 1, x) == 554:
+                    gameover = 1
+                    break
+                elif screen.inch(y - 1, x) == 1059:
+                    gameover = 2
+                    break
+            if q == ord('s'):
+                if screen.inch(y + 1, x) == ord(' '):
+                    move(1)
+                elif screen.inch(y + 1, x) == 554:
+                    gameover = 1
+                    break
+                elif screen.inch(y + 1, x) == 1059:
+                    gameover = 2
+                    break
+            if steps == 28:
+                gravity[0] = 0
+                steps = 0
         if gravity[1]:
             if q == ord('a'):
                 if screen.inch(y - 1, x) == ord(' '):
@@ -177,7 +220,7 @@ def game():
                 elif screen.inch(y + 1, x) == 554:
                     gameover = 1
                     break
-                elif screen.inch(y, x - 1) == 1059:
+                elif screen.inch(y + 1, x) == 1059:
                     gameover = 2
                     break
         if q == ord('l') and checkaround():
@@ -196,6 +239,7 @@ if mode == "S" or mode == "P":
     map = open('mapfinal.txt', 'r+')
     coords = map.readlines()
     map.close()
+    steps = 0
     screen = curses.initscr()
     # else i could not use the bottom right corner(23,79)
     curses.resize_term(25, 81)
@@ -207,6 +251,7 @@ if mode == "S" or mode == "P":
         curses.COLOR_MAGENTA,
         curses.COLOR_GREEN)  # +:gravity changer
     curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLUE)  # :win
+    curses.init_pair(5, curses.COLOR_YELLOW, curses.COLOR_MAGENTA)  # N:no gravity
     # gravity[1]: shows if gravity is vertical(0) or horizontal(1) ||
     # gravity[0]: shows if falling down/right(0) or up/left(1)
     gravity = [0, 0]
