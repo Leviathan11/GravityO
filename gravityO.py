@@ -61,7 +61,7 @@ def move(num):  # 1:down 2:up 3:left 4:right
 
 
 def game():
-    global y, x, gravity, gameover, steps
+    global y, x, gravity, gameover, steps, kill_time
     curses.cbreak()
     curses.noecho()
     curses.curs_set(0)
@@ -164,6 +164,14 @@ def game():
                         gravity[1] = 0
                         gravity[0] = 2
                         time.sleep(0.1)
+            if checkaround():
+                time.sleep(0.1)
+            kill_time += 1
+            if kill_time == 20:
+                screen.addch(9, 58, 554)
+            if kill_time == 40:
+                screen.addch(9, 58, ' ')
+                kill_time = 0
         if not gravity[1]:
             if q == ord('a'):
                 if screen.inch(y, x - 1) == ord(' '):
@@ -240,6 +248,7 @@ if mode == "S" or mode == "P":
     coords = map.readlines()
     map.close()
     steps = 0
+    kill_time = 0
     screen = curses.initscr()
     # else i could not use the bottom right corner(23,79)
     curses.resize_term(25, 81)
